@@ -12,7 +12,7 @@ export default function Box(props) {
   if (props.state === "top") {
     useFrame(() => {
       if (axis === "x") {
-        mesh.current.position.x += 0.01 * direction;
+        mesh.current.position.x += 0.05 * direction;
         props.setPos([mesh.current.position.x, mesh.current.position.y, mesh.current.position.z]);
         if (mesh.current.position.x > 2 || mesh.current.position.x < -2) {
           setDirection(direction * -1);
@@ -20,7 +20,7 @@ export default function Box(props) {
       }
 
       if (axis === "z") {
-        mesh.current.position.z += 0.02 * direction;
+        mesh.current.position.z += 0.05 * direction;
         props.setPos([mesh.current.position.x, mesh.current.position.y, mesh.current.position.z]);
         if (mesh.current.position.z > 2 || mesh.current.position.z < -2) {
           setDirection(direction * -1);

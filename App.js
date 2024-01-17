@@ -14,6 +14,10 @@ export default function App() {
   const [movingPosition, setMovingPosition] = useState([0, 0, 0]);
 
   useEffect(() => {
+    restart();
+  }, []);
+
+  function restart() {
     setBox([
       {
         position: [0, 0, 0],
@@ -26,7 +30,7 @@ export default function App() {
       scale: [1, 0.3, 1],
       color: "#ff9",
     });
-  }, []);
+  } 
 
   useEffect(() => {
     if (top.position) {
@@ -40,21 +44,15 @@ export default function App() {
   }, []);
 
   function handleClick(e) {
-    console.log("click");
-    console.log(top.position);
-    console.log(movingPosition);
     const currentPosition = movingPosition;
     if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
       placeBlock(currentPosition);
       createBlock(currentPosition);
     }
     else{
-      console.log(top.scale[0]-Math.abs(currentPosition[0]));
-      console.log(top.scale[0],Math.abs(currentPosition[0]));
-      console.log(top.scale[2],Math.abs(currentPosition[2]));
-      console.log(top.scale[2]-Math.abs(currentPosition[2]));
       console.log("Game Over");
-      setTop({});
+      restart();
+      return;
     }
     setMoveAxis(moveAxis === "x" ? "z" : "x");
   }
@@ -109,14 +107,16 @@ export default function App() {
 
   return (
     <>
-      <View style={styles.container}>
+      {/* <View style={styles.container}>
         <Pressable onPress={handleClick}>
           <Text style={styles.Button}>Start</Text>
         </Pressable>
-      </View>
+      </View> */}
       <Canvas
         orthographic
-        camera={{ zoom: 80, position: [0, 0, 5], near: -1000, far: 1000 }}
+        camera={{ zoom: 100, position: [0, 0, 5], near: -1000, far: 1000 }}
+        style={styles.canvas}
+        onTouchStart={handleClick}
       >
         <Camera aspect={screenSize[0] / screenSize[1]} yaxis={yaxis} />
         <ambientLight />
@@ -147,18 +147,23 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 0.5,
-    backgroundColor: "#fff",
+    backgroundColor: "#25292e",
     alignItems: "center",
     justifyContent: "center",
   },
   Button: {
-    color: "#000",
+    color: "#fff",
     fontSize: 25,
     fontWeight: "bold",
     borderRadius: 5,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderColor: "#000",
+    borderColor: "#fff",
     borderWidth: 2,
+  },
+  canvas: {
+    backgroundColor: "#25292e",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
