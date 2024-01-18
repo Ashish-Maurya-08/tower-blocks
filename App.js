@@ -16,7 +16,11 @@ export default function App() {
   const [top, setTop] = useState({});
   const [yaxis, setYaxis] = useState(0);
   const [moveAxis, setMoveAxis] = useState("x");
-  const [movingPosition, setMovingPosition] = useState([0, 0, 0]);
+  const [movingPosition, setMovingPosition] = useState([]);
+  const [getPos, setGetPos] = useState(false);
+  const [placed, setPlaced] = useState(false);
+
+  // Use Effects
   
   useEffect(() => {
     restart();
@@ -32,6 +36,42 @@ export default function App() {
     const { width, height } = Dimensions.get("window");
     setScreenSize([width, height]);
   }, []);
+
+  useEffect(() => {
+    if (getPos){
+      setGetPos(false);
+    }
+  }, [getPos]);
+
+  useEffect(() => {
+    console.log(movingPosition);
+    const currentPosition = movingPosition;
+    if (movingPosition.length > 0){
+      if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
+        placeBlock(movingPosition);
+        setPlaced(true);
+      }
+      else{
+        alert("Game Over");
+        restart();
+        return;
+      }
+
+    }
+    else{
+      console.log("Game Over");
+    }
+  }
+  , [movingPosition]);
+
+  useEffect(() => {
+    if (placed){
+      createBlock(movingPosition);
+      setMoveAxis(moveAxis === "x" ? "z" : "x");
+      setPlaced(false);
+    }
+  }
+  , [placed]);
 
 
   // Functions
@@ -51,21 +91,30 @@ export default function App() {
     });
   } 
 
+  function setCurrent(position){
+    console.log(position);
+    setMovingPosition(position);
+  }
+
 
   // Handle Click
 
   function handleClick(e) {
-    const currentPosition = movingPosition;
-    if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
-      placeBlock(currentPosition);
-      createBlock(currentPosition);
-    }
-    else{
-      console.log("Game Over");
-      restart();
-      return;
-    }
-    setMoveAxis(moveAxis === "x" ? "z" : "x");
+
+    setGetPos(true);
+    // const currentPosition = movingPosition;
+    // if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
+    //   placeBlock(currentPosition);
+    //   createBlock(currentPosition);
+    // }
+    // else{
+    //   console.log("Game Over");
+    //   restart();
+    //   return;
+    // }
+    // setMoveAxis(moveAxis === "x" ? "z" : "x");
+
+    // alert("Game Over");
   }
 
   // Create new block
@@ -154,8 +203,9 @@ export default function App() {
             color={top.color}
             axis={moveAxis}
             state="top"
-            setPos={setMovingPosition}
-                      />
+            setCurrent={setCurrent}
+            getPos={getPos}
+          />
         )}
       </Canvas>
       <StatusBar style="light" />
@@ -170,7 +220,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 0.3,
-    flexDirection: "column",
+    flexDirection: "row",
     backgroundColor: "#25292e",
     alignItems:"flex-end",
     justifyContent: "center",

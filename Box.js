@@ -3,36 +3,38 @@ import { GridHelper } from "three";
 import { useFrame } from "@react-three/fiber";
 
 export default function Box(props) {
-  const { position, scale, color, wireframe } = props;
+  const { position, scale, color, getPos , setCurrent } = props;
   const [direction, setDirection] = useState(1);
   const { axis } = props;
-  
   const mesh = useRef();
-
-  if (props.state === "top") {
-    useFrame(() => {
-            if (axis === "x") {
-        mesh.current.position.x += 0.05 * direction;
-        props.setPos([mesh.current.position.x, mesh.current.position.y, mesh.current.position.z]);
-        if (mesh.current.position.x > 2 || mesh.current.position.x < -2) {
-          setDirection(direction * -1);
+  
+  useFrame(()=>{
+    if (props.state==="top"){
+      if (axis==="x"){
+        mesh.current.position.x += direction*0.04
+        if (mesh.current.position.x > 1.5 || mesh.current.position.x < -1.5){
+          setDirection(direction* -1)
         }
       }
-
-      if (axis === "z") {
-        mesh.current.position.z += 0.05 * direction;
-        props.setPos([mesh.current.position.x, mesh.current.position.y, mesh.current.position.z]);
-        if (mesh.current.position.z > 2 || mesh.current.position.z < -2) {
-          setDirection(direction * -1);
+      else if (axis==="z"){
+        mesh.current.position.z += direction*0.04
+        if (mesh.current.position.z > 1.5 || mesh.current.position.z < -1.5){
+          setDirection(direction* -1)
         }
       }
-    });
+    }
+  })
+
+
+  if (mesh.current && getPos){
+    const {x, y, z} = mesh.current.position
+    setCurrent([x, y, z])
   }
 
   return (
     <mesh position={position} scale={scale} ref={mesh}>
       <boxGeometry args={[1, 1, 1]} />
-      <meshPhongMaterial color={color} wireframe={wireframe} />
+      <meshPhongMaterial color={color} />
     </mesh>
   );
 }
