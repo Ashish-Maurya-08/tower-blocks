@@ -1,21 +1,40 @@
-// import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, Dimensions, Pressable } from "react-native";
 import { Canvas } from "@react-three/fiber/native";
 import Box from "./Box";
 import Camera from "./Camera";
 
+
+
 export default function App() {
+
+  // States
+
   const [screenSize, setScreenSize] = useState([0, 0]);
   const [box, setBox] = useState([]);
   const [top, setTop] = useState({});
   const [yaxis, setYaxis] = useState(0);
   const [moveAxis, setMoveAxis] = useState("x");
   const [movingPosition, setMovingPosition] = useState([0, 0, 0]);
-
+  
   useEffect(() => {
     restart();
   }, []);
+
+  useEffect(() => {
+    if (top.position) {
+      setYaxis(top.position[1]);
+    }
+  }, [top]);
+  
+  useEffect(() => {
+    const { width, height } = Dimensions.get("window");
+    setScreenSize([width, height]);
+  }, []);
+
+
+  // Functions
 
   function restart() {
     setBox([
@@ -32,16 +51,8 @@ export default function App() {
     });
   } 
 
-  useEffect(() => {
-    if (top.position) {
-      setYaxis(top.position[1]);
-    }
-  }, [top]);
 
-  useEffect(() => {
-    const { width, height } = Dimensions.get("window");
-    setScreenSize([width, height]);
-  }, []);
+  // Handle Click
 
   function handleClick(e) {
     const currentPosition = movingPosition;
@@ -56,6 +67,8 @@ export default function App() {
     }
     setMoveAxis(moveAxis === "x" ? "z" : "x");
   }
+
+  // Create new block
 
   function createBlock(currentPosition) {
 
@@ -77,6 +90,8 @@ export default function App() {
     }
   }
 
+
+  // Place new block
 
   function placeBlock(currentPosition) {
     if (moveAxis === "z") {
@@ -107,16 +122,19 @@ export default function App() {
 
   return (
     <>
-      {/* <View style={styles.container}>
-        <Pressable onPress={handleClick}>
-          <Text style={styles.Button}>Start</Text>
-        </Pressable>
-      </View> */}
+    {/* UI Upper half */}
+      <View style={styles.container}>
+          <Text style={styles.Button}>Tower Block</Text>
+      </View>
+
+
+      {/* UI Lower half */}
       <Canvas
         orthographic
         camera={{ zoom: 100, position: [0, 0, 5], near: -1000, far: 1000 }}
         style={styles.canvas}
         onTouchStart={handleClick}
+        onPointerDown={handleClick}
       >
         <Camera aspect={screenSize[0] / screenSize[1]} yaxis={yaxis} />
         <ambientLight />
@@ -137,20 +155,27 @@ export default function App() {
             axis={moveAxis}
             state="top"
             setPos={setMovingPosition}
-          />
+                      />
         )}
       </Canvas>
+      <StatusBar style="light" />
     </>
   );
 }
 
+
+
+// Styles
+
 const styles = StyleSheet.create({
   container: {
-    flex: 0.5,
+    flex: 0.3,
+    flexDirection: "column",
     backgroundColor: "#25292e",
-    alignItems: "center",
+    alignItems:"flex-end",
     justifyContent: "center",
   },
+  
   Button: {
     color: "#fff",
     fontSize: 25,

@@ -6,12 +6,12 @@ export default function Box(props) {
   const { position, scale, color, wireframe } = props;
   const [direction, setDirection] = useState(1);
   const { axis } = props;
-
+  
   const mesh = useRef();
 
   if (props.state === "top") {
     useFrame(() => {
-      if (axis === "x") {
+            if (axis === "x") {
         mesh.current.position.x += 0.05 * direction;
         props.setPos([mesh.current.position.x, mesh.current.position.y, mesh.current.position.z]);
         if (mesh.current.position.x > 2 || mesh.current.position.x < -2) {
