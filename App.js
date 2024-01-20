@@ -22,9 +22,13 @@ export default function App() {
 
   // Use Effects
   
+  // Initial Render
   useEffect(() => {
     restart();
   }, []);
+
+
+  // Update Camera Position
 
   useEffect(() => {
     if (top.position) {
@@ -32,10 +36,15 @@ export default function App() {
     }
   }, [top]);
   
+  // Get Screen Size
+
   useEffect(() => {
     const { width, height } = Dimensions.get("window");
     setScreenSize([width, height]);
   }, []);
+
+
+  // Get Moving Position
 
   useEffect(() => {
     if (getPos){
@@ -43,38 +52,45 @@ export default function App() {
     }
   }, [getPos]);
 
+
+  // Check if block is placed
+
   useEffect(() => {
-    console.log(movingPosition);
-    const currentPosition = movingPosition;
+    const overLap = getOverLap();
     if (movingPosition.length > 0){
-      if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
-        placeBlock(movingPosition);
+      if ((moveAxis==='x' && top.scale[0]-Math.abs(overLap) > 0) || (moveAxis==='z' && top.scale[2]-Math.abs(overLap) > 0)) {
+        placeBlock(overLap);
         setPlaced(true);
       }
       else{
-        alert("Game Over");
+        alert("Game Over\nScore: "+(box.length-1)+"\n\nClick OK to restart");
         restart();
         return;
       }
 
     }
-    else{
-      console.log("Game Over");
-    }
   }
   , [movingPosition]);
 
+
+
+  // Create new block
+
   useEffect(() => {
     if (placed){
-      createBlock(movingPosition);
+      const overLap = getOverLap();
+      createBlock(overLap);
       setMoveAxis(moveAxis === "x" ? "z" : "x");
       setPlaced(false);
     }
+
   }
   , [placed]);
 
 
   // Functions
+
+  // Restart Game
 
   function restart() {
     setBox([
@@ -89,50 +105,51 @@ export default function App() {
       scale: [1, 0.3, 1],
       color: "#ff9",
     });
+    setMoveAxis("x");
   } 
 
+  // Set Moving Position
+
   function setCurrent(position){
-    console.log(position);
     setMovingPosition(position);
+  }
+
+  // Get Overlap
+
+  function getOverLap(){
+    if (movingPosition.length > 0){
+      if (moveAxis==='x'){
+        return top.position[0]-movingPosition[0];
+      }
+      else{
+        return top.position[2]-movingPosition[2];
+      }
+    }
   }
 
 
   // Handle Click
 
   function handleClick(e) {
-
     setGetPos(true);
-    // const currentPosition = movingPosition;
-    // if (top.scale[0]-Math.abs(currentPosition[0]) > 0 && top.scale[2]-Math.abs(currentPosition[2]) > 0) {
-    //   placeBlock(currentPosition);
-    //   createBlock(currentPosition);
-    // }
-    // else{
-    //   console.log("Game Over");
-    //   restart();
-    //   return;
-    // }
-    // setMoveAxis(moveAxis === "x" ? "z" : "x");
-
-    // alert("Game Over");
   }
 
   // Create new block
 
-  function createBlock(currentPosition) {
+  function createBlock(overLap) {
 
     if (moveAxis === "x") {
       const newBlock = {
-        position: [top.position[0]+currentPosition[0]/2, top.position[1]+0.3, top.position[2]],
-        scale: [top.scale[0]-Math.abs(currentPosition[0]), top.scale[1], top.scale[2]],
+        position: [top.position[0]-(overLap/2), top.position[1]+0.3, top.position[2]],
+        scale: [top.scale[0]-Math.abs(overLap), top.scale[1], top.scale[2]],
         color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
       };
       setTop(newBlock);
     }
     else if(moveAxis === "z") {
       const newBlock = {
-        position: [top.position[0], top.position[1]+0.3, top.position[2]+currentPosition[2]/2],
-        scale: [top.scale[0], top.scale[1],top.scale[2]-Math.abs(currentPosition[2])],
+        position: [top.position[0], top.position[1]+0.3,top.position[2]-(overLap/2)],
+        scale: [top.scale[0], top.scale[1],top.scale[2]-Math.abs(overLap)],
         color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
       };
       setTop(newBlock);
@@ -142,14 +159,14 @@ export default function App() {
 
   // Place new block
 
-  function placeBlock(currentPosition) {
+  function placeBlock(overLap) {
     if (moveAxis === "z") {
       const newBlock = {
-        position: [top.position[0], top.position[1], top.position[2]+currentPosition[2]/2],
+        position: [top.position[0], top.position[1],top.position[2]-(overLap/2)],
         scale: [
           top.scale[0],
           top.scale[1],
-          top.scale[2]-Math.abs(currentPosition[2]),
+          top.scale[2]-Math.abs(overLap),
         ],
         color: top.color,
       };
@@ -157,9 +174,9 @@ export default function App() {
     } 
     else if(moveAxis === "x") {
       const newBlock = {
-        position: [(currentPosition[0]/2)+top.position[0], top.position[1], top.position[2]],
+        position: [top.position[0]-(overLap/2), top.position[1], top.position[2]],
         scale: [
-          top.scale[0]-Math.abs(currentPosition[0]),
+          top.scale[0]-Math.abs(overLap),
           top.scale[1],
           top.scale[2],
         ],
@@ -172,12 +189,16 @@ export default function App() {
   return (
     <>
     {/* UI Upper half */}
+
+
       <View style={styles.container}>
           <Text style={styles.Button}>Tower Block</Text>
+      <Text style={{color:"#fff", fontSize:20, fontWeight:"bold", position:"absolute", top:10, left:10}}>Score: {box.length-1}</Text>
       </View>
 
 
       {/* UI Lower half */}
+
       <Canvas
         orthographic
         camera={{ zoom: 100, position: [0, 0, 5], near: -1000, far: 1000 }}
@@ -185,7 +206,7 @@ export default function App() {
         onTouchStart={handleClick}
         onPointerDown={handleClick}
       >
-        <Camera aspect={screenSize[0] / screenSize[1]} yaxis={yaxis} />
+        <Camera aspect={screenSize[0]/screenSize[1]} yaxis={yaxis} />
         <ambientLight />
         <directionalLight position={[0, 10, 5]} intensity={1} />
         {box.map((b) => (
@@ -222,7 +243,7 @@ const styles = StyleSheet.create({
     flex: 0.3,
     flexDirection: "row",
     backgroundColor: "#25292e",
-    alignItems:"flex-end",
+    alignItems:"center",
     justifyContent: "center",
   },
   
