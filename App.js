@@ -1,13 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, Dimensions, Pressable } from "react-native";
+import { StyleSheet, Text, View, Dimensions, Pressable,  } from "react-native";
 import { Canvas } from "@react-three/fiber/native";
 import Box from "./Box";
 import Camera from "./Camera";
+import * as Navigation from 'expo-navigation-bar';
 
 
 
 export default function App() {
+
+  Navigation.setBackgroundColorAsync("#25292e");
 
   // States
 
@@ -30,11 +33,16 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    restart();
-    if (status==="end"){
-      setStatus("ready");
+    if (status==="ready" || status==="start"){
+      restart();
     }
+    if (status==="end"){
+      setTop({});
+    }
+    console.log(status);
+    console.log(box.length);
   },[status] );
+
 
 
   // Update Camera Position
@@ -72,10 +80,7 @@ export default function App() {
         setPlaced(true);
       }
       else{
-        alert("Game Over\nScore: "+(box.length-1)+"\n\nClick OK to restart");
         setStatus("end");
-        restart();
-        return;
       }
 
     }
@@ -103,6 +108,7 @@ export default function App() {
   // Restart Game
 
   function restart() {
+    setYaxis(0);
     setBox([
       {
         position: [0, 0, 0],
@@ -164,6 +170,9 @@ export default function App() {
     else if (status==="start"){
       setGetPos(true);
     }
+    else if (status==="end"){
+      setStatus("ready")
+    }
   }
 
   // Create new block
@@ -219,7 +228,10 @@ export default function App() {
 
 
       <View style={styles.container}>
-          {/* <Text style={styles.Button}>Tower Block</Text> */}
+      {
+        status==="end" &&
+        <Text style={styles.score}>Game Over</Text>
+      }
       {
         status==="start" && 
       <Text style={styles.score}>{box.length-1}</Text>
