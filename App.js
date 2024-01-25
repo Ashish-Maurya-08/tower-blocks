@@ -19,6 +19,8 @@ export default function App() {
   const [movingPosition, setMovingPosition] = useState([]);
   const [getPos, setGetPos] = useState(false);
   const [placed, setPlaced] = useState(false);
+  const [status, setStatus] = useState("ready");
+  const [randomOff, setRandomOff] = useState(Math.floor(Math.random() * 100));
 
   // Use Effects
   
@@ -26,6 +28,13 @@ export default function App() {
   useEffect(() => {
     restart();
   }, []);
+
+  useEffect(() => {
+    restart();
+    if (status==="end"){
+      setStatus("ready");
+    }
+  },[status] );
 
 
   // Update Camera Position
@@ -64,6 +73,7 @@ export default function App() {
       }
       else{
         alert("Game Over\nScore: "+(box.length-1)+"\n\nClick OK to restart");
+        setStatus("end");
         restart();
         return;
       }
@@ -96,15 +106,21 @@ export default function App() {
     setBox([
       {
         position: [0, 0, 0],
-        scale: [1, 0.3, 1],
-        color: "#fff",
+        scale: [1, 0.2, 1],
+        color: "white"
       },
     ]);
-    setTop({
-      position: [0, 0.3, 0],
-      scale: [1, 0.3, 1],
-      color: "#ff9",
-    });
+    if (status==="start"){
+      let colorOffset=getColorOffset();
+      setTop({
+        position: [0, 0.2, 0],
+        scale: [1, 0.2, 1],
+        color: `rgb(${colorOffset})`,
+      });
+    }
+    else{
+      setTop({});
+    }
     setMoveAxis("x");
   } 
 
@@ -127,63 +143,74 @@ export default function App() {
     }
   }
 
+  // Get Color Offset
+
+  function getColorOffset(){
+    let Offset=box.length+randomOff;
+    var r = Math.round(Math.sin(0.3 * Offset) * 55 + 200);
+    var g = Math.round(Math.sin(0.3 * Offset + 2) * 55 + 200);
+    var b = Math.round(Math.sin(0.3 * Offset + 4) * 55 + 200);
+    let colorOffset = [r, g, b]
+    return colorOffset;
+  } 
+
 
   // Handle Click
 
   function handleClick(e) {
-    setGetPos(true);
+    if (status==="ready"){
+      setStatus("start")
+    }
+    else if (status==="start"){
+      setGetPos(true);
+    }
   }
 
   // Create new block
 
   function createBlock(overLap) {
+    let newColor=getColorOffset();
+    console.log(newColor);
 
-    if (moveAxis === "x") {
-      const newBlock = {
-        position: [top.position[0]-(overLap/2), top.position[1]+0.3, top.position[2]],
-        scale: [top.scale[0]-Math.abs(overLap), top.scale[1], top.scale[2]],
-        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      };
-      setTop(newBlock);
+    let newBlock={
+      position: [top.position[0], top.position[1]+0.2, top.position[2]],
+      scale: [top.scale[0], top.scale[1], top.scale[2]],
+      color: `rgb(${newColor})`,
     }
-    else if(moveAxis === "z") {
-      const newBlock = {
-        position: [top.position[0], top.position[1]+0.3,top.position[2]-(overLap/2)],
-        scale: [top.scale[0], top.scale[1],top.scale[2]-Math.abs(overLap)],
-        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      };
-      setTop(newBlock);
+
+    if (moveAxis==='x'){
+      newBlock.position[0] =newBlock.position[0]-(overLap/2);
+      newBlock.scale[0] = newBlock.scale[0]-Math.abs(overLap);
     }
+    else if(moveAxis==='z'){
+      newBlock.position[2] =newBlock.position[2]-(overLap/2);
+      newBlock.scale[2] = newBlock.scale[2]-Math.abs(overLap);
+    }
+
+    setTop(newBlock);
   }
 
 
   // Place new block
 
   function placeBlock(overLap) {
-    if (moveAxis === "z") {
-      const newBlock = {
-        position: [top.position[0], top.position[1],top.position[2]-(overLap/2)],
-        scale: [
-          top.scale[0],
-          top.scale[1],
-          top.scale[2]-Math.abs(overLap),
-        ],
-        color: top.color,
-      };
-      setBox([...box, newBlock]);
-    } 
-    else if(moveAxis === "x") {
-      const newBlock = {
-        position: [top.position[0]-(overLap/2), top.position[1], top.position[2]],
-        scale: [
-          top.scale[0]-Math.abs(overLap),
-          top.scale[1],
-          top.scale[2],
-        ],
-        color: top.color,
-      };
-      setBox([...box, newBlock]);
+
+    let newBlock={
+      position: [top.position[0], top.position[1], top.position[2]],
+      scale: [top.scale[0], top.scale[1], top.scale[2]],
+      color: top.color,
     }
+
+    if (moveAxis === "z") {
+      newBlock.position[2] =newBlock.position[2]-(overLap/2);
+      newBlock.scale[2] = newBlock.scale[2]-Math.abs(overLap);
+    }
+    else if(moveAxis === "x") {
+      newBlock.position[0] = newBlock.position[0]-(overLap/2);
+      newBlock.scale[0] = newBlock.scale[0]-Math.abs(overLap);
+    }
+
+    setBox([...box, newBlock]);
   }
 
   return (
@@ -192,8 +219,23 @@ export default function App() {
 
 
       <View style={styles.container}>
-          <Text style={styles.Button}>Tower Block</Text>
-      <Text style={{color:"#fff", fontSize:20, fontWeight:"bold", position:"absolute", top:10, left:10}}>Score: {box.length-1}</Text>
+          {/* <Text style={styles.Button}>Tower Block</Text> */}
+      {
+        status==="start" && 
+      <Text style={styles.score}>{box.length-1}</Text>
+      }
+      {
+        status==="ready" &&
+        <Pressable
+          style={styles.Button}
+          onPress={()=>{
+            setStatus("start")
+            restart()
+          }}
+        >
+          <Text style={{color:"#fff", fontSize:20, fontWeight:"bold"}}>Start</Text>
+        </Pressable>
+      }
       </View>
 
 
@@ -208,7 +250,7 @@ export default function App() {
       >
         <Camera aspect={screenSize[0]/screenSize[1]} yaxis={yaxis} />
         <ambientLight />
-        <directionalLight position={[0, 10, 5]} intensity={1} />
+        <directionalLight position={[0, 100, 5]} intensity={1} />
         {box.map((b) => (
           <Box
             position={b.position}
@@ -240,7 +282,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 0.3,
+    height: "40%",
     flexDirection: "row",
     backgroundColor: "#25292e",
     alignItems:"center",
@@ -249,6 +291,7 @@ const styles = StyleSheet.create({
   
   Button: {
     color: "#fff",
+
     fontSize: 25,
     fontWeight: "bold",
     borderRadius: 5,
@@ -262,4 +305,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  score:{
+    color:"#fff",
+    fontSize: 50,
+    fontWeight: "bold",
+  }
 });

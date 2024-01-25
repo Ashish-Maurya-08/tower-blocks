@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { GridHelper } from "three";
 import { useFrame } from "@react-three/fiber";
 
 export default function Box(props) {
